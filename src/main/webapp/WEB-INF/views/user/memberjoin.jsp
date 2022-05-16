@@ -168,7 +168,7 @@
 		                                    </div>
 		                                    <div class="col-sm-6">
 		                                    	<button type="button" style="color: white; background-color: rgb(37, 214, 179); font-size: 15px; border: none;" class="btn btn-success btn-user btn-block"
-		                                    	 onclick="idCheck()"><b>아이디 중복확인</b></button>
+		                                    	 onclick="idCheck"><b>아이디 중복확인</b></button>
 		                                    </div>
 		                                </div>
                                         <div class="form-group">
