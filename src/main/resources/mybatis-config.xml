@@ -4,9 +4,10 @@
   "http://mybatis.org/dtd/mybatis-3-config.dtd">
  <configuration>
  	<typeAliases>
- 		<typeAlias alias="BoardDTO" type="kr.co.imh.domain.BoardDTO"/>
- 		<typeAlias alias="BoardReply" type="kr.co.imh.domain.BoardReply"/>
- 		<typeAlias alias="IMHDTO" type="kr.co.imh.domain.IMHDTO"/>
- 		<typeAlias alias="PageMaker" type="kr.co.imh.utils.PageMaker"/>
+ 		<typeAlias alias="UserVO" type="com.myliket.domain.UserVO"/>
+ 		<typeAlias alias="LoginVO" type="com.myliket.domain.LoginVO"/>
+ 		<typeAlias alias="TodocateVO" type="com.myliket.domain.TodocateVO"/>
+ 		<typeAlias alias="TodoVO" type="com.myliket.domain.TodoVO"/>
+ 		<typeAlias alias="TodoTotalVO" type="com.myliket.domain.TodoTotalVO"/>
  	</typeAliases>
  </configuration>
