@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myliket.TodocateMapper">
+
+
+	 <!-- todocateIdInsert : 카테고리 코드 등록 -->
+	 <insert id="todocateIdInsert" parameterType="TodocateVO">
+	 /*todocateInsert*/
+		INSERT IGNORE INTO
+                todocate
+		VALUES
+		    ( UNHEX(#{todocateCode})
+		    , #{todocateId}
+		    , '등록중'
+		    , 'CI'
+		    , now()
+		    , null
+		    )
+	 </insert>
+	 
+	 <!-- todocateInsertUpdate : 카테고리코드 사용자 입력정보로 수정-->
+	 <update id="todocateInsertUpdate" parameterType="TodocateVO" >
+	 /*todocateInsertUpdate*/
+		UPDATE
+	        todocate
+		SET
+		     todocateName=#{todocateName}
+		    , todocateLastdate=now()
+		    , todocateState='CY'
+		WHERE
+		     HEX(todocateCode)=#{todocateCode}
+		AND
+			todocateId = #{todocateId}
+		AND	
+			todocateState='CI'  
+	 </update>
+	 
+	<!-- todocateUpdateCheck : 카테고리등록메뉴에서 이미 수정했는지 확인 -->
+	<select id="todocateUpdateCheck" parameterType="java.util.Map" resultType="java.lang.Boolean">
+	/*todocateUpdateCheck*/
+		SELECT
+			IF(COUNT(HEX(todocateCode)=#{todocateCode}), 1, 0)
+		FROM
+			todocate
+		WHERE
+			HEX(todocateCode)=#{todocateCode}
+		AND
+			todocateId = #{todocateId}
+		AND
+			todocateState='CY'
+	</select>
+	 
+	<!-- todocateList : 일정 카테고리 목록 조회 -->
+	<select id="todocateList" parameterType="java.util.Map" resultType="TodocateVO">
+	/*todocateList*/
+		SELECT
+			HEX(todocateCode) AS todocateCode
+		    , todocateName
+		FROM
+			todocate 
+		WHERE
+			todocateId = #{userId}
+		AND
+			todocateState IN ('CU', 'CY')
+		ORDER BY
+			todocateRegdate ASC	
+	</select>
+	
+	<!-- todocateCheck : 일정 카테고리 조회(단일) 있는지 확인 -->
+	<select id="todocateCheck" parameterType="java.util.Map" resultType="java.lang.Boolean">
+	/*todocateCheck*/
+		SELECT
+			IF(COUNT(HEX(todocateCode)=#{todocateCode}), 1, 0)
+		FROM
+			todocate
+		WHERE
+			todocateState IN ('CU', 'CY')
+		AND
+			HEX(todocateCode)=#{todocateCode}
+	</select>
+	
+	<!-- getTodocateDetail : 일정 카테고리 조회(단일) -->
+	<select id="getTodocateDetail" parameterType="java.util.Map" resultType="TodocateVO">
+	/*getTodocateDetail*/
+		SELECT
+			HEX(todocateCode) AS todocateCode
+		    , todocateName
+		    , todocateId
+		    , todocateState
+		FROM
+			todocate 
+		WHERE
+			todocateState IN ('CU', 'CY')
+		AND
+			HEX(todocateCode)=#{todocateCode}
+	</select>
+	
+	<!-- todocateUpdating : 카테고리 수정중으로 상태 변경 -->
+	 <update id="todocateUpdating" parameterType="java.util.Map" >
+	 /*todocateUpdating*/
+		UPDATE
+	        todocate
+		SET
+		    todocateState='CU'
+		    , todocateLastdate=now()
+		WHERE
+		     HEX(todocateCode)=#{todocateCode} 
+	 </update>
+	 
+	 
+	 <!-- todocate Update : 카테고리 이름 수정 -->
+	 <update id="todocateUpdate" parameterType="TodocateVO" >
+	 /*todocate Update*/
+		UPDATE
+	        todocate
+		SET
+		     todocateName=#{todocateName}
+		    , todocateState='CY'
+		    , todocateLastdate=now()
+		WHERE
+		     HEX(todocateCode)=#{todocateCode}
+		AND
+			todocateId = #{todocateId}     
+	 </update>
+	 
+	 
+	 <!-- todocate Delete : 카테고리 삭제-->
+	 <update id="todocateDelete" parameterType="java.util.Map" >
+	 /*todocate Delete*/
+		UPDATE
+	        todocate
+		SET
+		    todocateState='CN'
+		    , todocateRegdate=now()
+		WHERE
+		     HEX(todocateCode)=#{todocateCode}
+		AND
+			todocateId = #{todocateId}     
+	 </update>
+	
+</mapper>

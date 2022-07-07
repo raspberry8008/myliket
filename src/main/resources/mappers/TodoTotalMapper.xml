@@ -1,0 +1,267 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myliket.TodoTotalMapper">
+
+	<!-- todayReadyCnt : 오늘 할일 등록 카운트 -->
+	<update id="todayReadyUpdate" parameterType="java.util.Map">
+	    UPDATE
+	    	tododailytotal
+	    SET 
+	    	todayReadyCnt = todayReadyCnt + 1
+	    WHERE
+	    	totalId=#{totalId}
+	    AND
+	    	totaldate=curdate()
+	</update>
+	
+	<!-- beforeReadyUpdate : 오늘 이후 할일 등록 카운트 -->
+	<update id="beforeReadyUpdate" parameterType="java.util.Map">
+	    UPDATE
+	    	tododailytotal
+	    SET 
+	    	beforeReadyCnt = beforeReadyCnt + 1
+	    WHERE
+	    	totalId=#{totalId}
+	    AND
+	    	totaldate=curdate()
+	</update>
+	
+	<!-- todaycomUpdate : 오늘 할일 완료 카운트 -->
+	<update id="todaycomUpdate" parameterType="java.util.Map">
+	    UPDATE
+	    	tododailytotal
+	    SET 
+	    	todaycomCnt = todaycomCnt + 1
+	    	, totalcomCnt = totalcomCnt + 1
+	    	, todayReadyCnt = todayReadyCnt - 1
+	    WHERE
+	    	totalId=#{totalId}
+	    AND
+	    	totaldate=curdate()
+	</update>
+	
+	<!-- pastcomUpdate : 지난 할일 완료 카운트 -->
+	<update id="pastcomUpdate" parameterType="java.util.Map">
+	    UPDATE
+	    	tododailytotal
+	    SET 
+	    	todaycomCnt = todaycomCnt + 1
+	    	, totalcomCnt = totalcomCnt + 1
+	    	, pastReadyCnt = pastReadyCnt - 1
+	    WHERE
+	    	totalId=#{totalId}
+	    AND
+	    	totaldate=curdate()
+	</update>
+	
+	<!-- beforecomUpdate : 예정 할일 완료 카운트 -->
+	<update id="beforecomUpdate" parameterType="java.util.Map">
+	    UPDATE
+	    	tododailytotal
+	    SET 
+	    	todaycomCnt = todaycomCnt + 1
+	    	, totalcomCnt = totalcomCnt + 1
+	    	, beforeReadyCnt = beforeReadyCnt - 1
+	    WHERE
+	    	totalId=#{totalId}
+	    AND
+	    	totaldate=curdate()
+	</update>
+	
+	<!-- todaydeleteUpdate : 오늘 할일 삭제 카운트 -->
+	<update id="todaydeleteUpdate" parameterType="java.util.Map">
+	    UPDATE
+	    	tododailytotal
+	    SET 
+	    	todayReadyCnt = todayReadyCnt - 1
+	    WHERE
+	    	totalId=#{totalId}
+	    AND
+	    	totaldate=curdate()
+	</update>
+	
+	<!-- pastdeleteUpdate : 지난 할일 삭제 카운트 -->
+	<update id="pastdeleteUpdate" parameterType="java.util.Map">
+	/*pastdelete Update*/
+	    UPDATE
+	    	tododailytotal
+	    SET 
+	    	pastReadyCnt = pastReadyCnt - 1
+	    WHERE
+	    	totalId=#{totalId}
+	    AND
+	    	totaldate=curdate()
+	</update>
+	
+	<!-- beforedeleteUpdate : 예정 할일 삭제 카운트 -->
+	<update id="beforedeleteUpdate" parameterType="java.util.Map">
+	    UPDATE
+	    	tododailytotal
+	    SET 
+	    	beforeReadyCnt = beforeReadyCnt - 1
+	    WHERE
+	    	totalId=#{totalId}
+	    AND
+	    	totaldate=curdate()
+	</update>
+	
+	<!-- todayReadyCheck : 오늘 할일 건수 -->
+	<select id="todayReadyCheck" resultType="java.lang.Integer">
+	/*todayReadyCheck*/
+		SELECT 
+			count(if(todoState IN ('TR', 'TU'), todoState, null)) AS todayReadyCnt
+		FROM 
+			tododetail
+		    , todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND
+		 	tododay=curdate()
+		AND
+			todocateId=#{userId}
+	</select>
+	
+	<!-- pastReadyCheck : 지난 할일 건수 -->
+	<select id="pastReadyCheck" resultType="java.lang.Integer">
+	/*pastReadyCheck*/
+		SELECT 
+			count(if(todoState IN ('TR', 'TU'), todoState, null)) AS pastReadyCnt
+		FROM 
+			tododetail
+		    , todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND
+		<![CDATA[
+			tododay < curdate()
+		]]> 
+		AND
+			todocateId=#{userId}
+	</select>
+	
+	<!-- beforeReadyCheck : 오늘 이후 할일 건수 -->
+	<select id="beforeReadyCheck" resultType="java.lang.Integer">
+	/*todayReadyCheck*/
+		SELECT 
+			count(if(todoState IN ('TR', 'TU'), todoState, null)) AS beforeReadyCnt
+		FROM 
+			tododetail
+		    , todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND
+		<![CDATA[
+			tododay > curdate()
+		]]> 
+		AND
+			todocateId=#{userId}
+	</select>
+	
+	<!-- todayComCheck : 오늘 완료 건수 -->
+	<select id="todayComCheck" resultType="java.lang.Integer">
+	/*todayComCheck*/
+		SELECT 
+			count(if(todoState='TC', todoState, null)) AS todaycomCnt
+		FROM 
+			tododetail
+		    , todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND
+		 	todoEnddate=curdate()
+		AND
+			todocateId=#{userId}
+	</select>
+	
+	<!-- totalComCheck : 총 완료 건수-->
+	<select id="totalComCheck" resultType="java.lang.Integer">
+	/*totalComCheck*/
+		SELECT 
+			count(if(todoState='TC', todoState, null)) AS totalcomCnt
+		FROM 
+			tododetail
+		    , todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND
+			todocateId=#{userId}
+	</select>
+	
+	<!-- totalCheck: 금일 통계 있는지 확인 -->
+	<select id="totalCheck" parameterType="java.util.Map" resultType="java.lang.Boolean">
+	/*totalCheck*/
+		SELECT
+			IF(COUNT(totaldate=curdate()), 1, 0)
+		FROM
+			tododailytotal
+		WHERE
+			totalId=#{userId}
+		AND
+			totaldate=curdate()		
+	</select>
+	
+	<!-- todoTotalInsert : 금일 todo 통계 등록 -->
+	<insert id="todoTotalInsert" parameterType="TodoTotalVO" >
+	/*todoTotalInsert*/
+		INSERT INTO
+			tododailytotal
+				(
+					totalId
+		            , todayReadyCnt
+		            , pastReadyCnt
+		            , beforeReadyCnt
+		            , todaycomCnt
+		            , totalcomCnt
+		            , totaldate
+		        )
+		VALUES
+				(
+					#{totalId}
+		            , #{todayReadyCnt}
+		            , #{pastReadyCnt}
+		            , #{beforeReadyCnt}
+		            , #{todaycomCnt}
+		            , #{totalcomCnt}
+		            , curdate()
+		        )
+	</insert>
+	
+	<!-- todoDailytotal : 금일 통계 조회 -->
+	<select id="todoDailytotal" resultType="TodoTotalVO">
+	/*todoDailytotal*/
+		SELECT 
+		    totalId
+		    , todayReadyCnt
+		    , pastReadyCnt
+		    , beforeReadyCnt
+		    , todaycomCnt
+		    , totalcomCnt
+		    , totaldate
+		FROM 
+			tododailytotal
+		WHERE
+			totaldate=curdate()
+		AND
+			totalId=#{userId}
+	</select>
+	
+	<!-- todoDailytotal : 금일 통계 전체수정 -->
+	<select id="todoDailytotalUpdate" resultType="TodoTotalVO">
+	/*todoDailytotalUpdate*/
+		UPDATE
+			tododailytotal
+		SET	 
+		     todayReadyCnt=#{todayReadyCnt}
+		    , pastReadyCnt=#{pastReadyCnt}
+		    , beforeReadyCnt=#{beforeReadyCnt}
+		    , todaycomCnt=#{todaycomCnt}
+		    , totalcomCnt=#{totalcomCnt}
+		WHERE
+			totaldate=curdate()
+		AND
+			totalId=#{totalId}
+	</select>
+
+</mapper>

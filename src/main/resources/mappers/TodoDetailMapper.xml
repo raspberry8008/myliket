@@ -1,0 +1,334 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.myliket.TodoDetailMapper">
+
+	<!-- todoIdInsert : 할일 등록 요청 시 todoId insert -->
+	<insert id="todoIdInsert" parameterType="TodoVO">
+	/*todoIdInsert*/
+		INSERT IGNORE INTO
+			tododetail
+		VALUES
+			( UNHEX(#{todoId})
+			, UNHEX(#{cateCode})
+			, '등록중'
+			, '등록중'
+			, curdate()
+			, null
+			, 'TI'
+			, null
+			 )
+	</insert>	
+	
+	<!-- todoInsertUpdate : 할일등록완료(사용자 입력정보로 수정) -->
+	<update id="todoInsertUpdate" parameterType="TodoVO">
+	/*todoInsertUpdate*/
+		UPDATE
+			tododetail
+			, todocate
+		SET    
+			cateCode=UNHEX(#{cateCode})
+		     , todoTitle=#{todoTitle}
+		     , todoContent=#{todoContent}
+		     , tododay=#{tododay}
+		     , todotime=#{todotime}
+		     , todoState='TR'
+		     , todoEnddate=curdate()
+		WHERE
+			HEX(todocateCode)=#{cateCode}
+		AND	
+			HEX(todoId)=#{todoId}
+		AND
+			todocateId=#{userId}
+		AND
+			todoState='TI'			
+	</update>
+	
+	<!-- todoUpdateCheck : 할일 수정했는지 확인 -->
+	<select id="todoUpdateCheck" parameterType="java.util.Map" resultType="java.lang.Boolean">
+	/*todoUpdateCheck*/
+		SELECT
+			IF(COUNT(HEX(todoId)=#{todoId}), 1, 0)
+		FROM
+			tododetail
+			, todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND	
+			HEX(todoId)=#{todoId}
+		AND
+			todocateId = #{userId}
+		AND
+			todoState ='TR'
+	</select>
+	
+	<!-- todoDeleteCheck : 할일 삭제했는지 확인 -->
+	<select id="todoDeleteCheck" parameterType="java.util.Map" resultType="java.lang.Boolean">
+	/*todoDeleteCheck*/
+		SELECT
+			IF(COUNT(HEX(todoId)=#{todoId}), 1, 0)
+		FROM
+			tododetail
+			, todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND	
+			HEX(todoId)=#{todoId}
+		AND
+			todocateId = #{userId}
+		AND
+			todoState ='TD'
+	</select>
+	
+	<!-- todoListCount: 할일 갯수 -->
+	<select id="todoListCount" parameterType="java.util.Map" resultType="java.lang.Integer">
+	/*todoListCount*/
+		SELECT
+			count(todoId) AS todoListCount			
+		FROM
+	        tododetail
+	        , todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND
+			todoState IN ('TR', 'TU')
+        AND
+	    	HEX(todocateCode)=#{todocateCode}	 
+	    AND
+	        todocateId=#{todocateId}	   
+	</select>
+	
+	<!-- todayReadyList: 오늘 일정 목록 전체조회(예정) -->
+	<select id="todayReadyList" parameterType="java.util.Map" resultType="TodoVO">
+	/*todayReadyList*/
+		SELECT			
+	        HEX(cateCode) AS cateCode
+	         , todocateName AS cateName
+	         , HEX(todoId) AS todoId
+	         , todoTitle
+	         , todoContent
+	         , DATE_FORMAT(tododay, '%Y%m%d') AS tododay
+	         , todotime
+		FROM
+	        tododetail
+	        , todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND
+			todoState IN ('TR', 'TU')
+	    AND      
+        	tododay = curdate()
+        AND
+	    	HEX(todocateCode)=#{todocateCode}	 
+	    AND
+	        todocateId=#{todocateId}
+	    GROUP BY
+	    	todoId 
+        ORDER BY 
+			tododay ASC
+			, todotime ASC 	   
+	</select>
+	
+	<!-- todoReadyList 오늘 포함 일정 전체조회(예정) -->
+	<select id="todoReadyList" parameterType="java.util.Map" resultType="TodoVO">
+	/*todoReadyList*/
+		SELECT			
+	        HEX(cateCode) AS cateCode
+	         , todocateName AS cateName
+	         , HEX(todoId) AS todoId
+	         , todoTitle
+	         , todoContent
+	         ,  DATE_FORMAT(tododay, '%Y%m%d') AS tododay
+	         , todotime
+		FROM
+			tododetail
+			, todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND
+	    	HEX(todocateCode)=#{todocateCode}
+		AND	
+			todocateId=#{todocateId}
+		AND        
+			todoState IN ('TR', 'TU')
+		ORDER BY 
+			tododay ASC
+   			 , todotime ASC 
+	</select>
+	
+	<!-- beforeReadyList: 오늘 이후 일정 전체조회(예정) -->
+	<select id="beforeReadyList" parameterType="java.util.Map" resultType="TodoVO">
+	/*beforeReadyList*/
+		SELECT			
+	        HEX(cateCode) AS cateCode
+	         , todocateName AS cateName
+	         , HEX(todoId) AS todoId
+	         , todoTitle
+	         , todoContent
+	         , DATE_FORMAT(tododay, '%Y%m%d') AS tododay
+	         , todotime
+		FROM
+			tododetail
+			, todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND
+	    	HEX(todocateCode)=#{todocateCode}
+		AND	
+			todocateId=#{todocateId}
+		AND        
+			todoState IN ('TR', 'TU')
+		AND
+		<![CDATA[
+			tododay > curdate()
+		]]> 
+		ORDER BY 
+			tododay ASC
+   			, todotime ASC 
+	</select>
+	
+	<!-- todoPastList : 지난 일정 전체조회(예정/미완료) -->
+	<select id="todoPastList" parameterType="java.util.Map" resultType="TodoVO">
+	/*todoPastList*/
+		SELECT			
+	        HEX(cateCode) AS cateCode
+	         , todocateName AS cateName
+	         , HEX(todoId) AS todoId
+	         , todoTitle
+	         , todoContent
+	         ,  DATE_FORMAT(tododay, '%Y%m%d') AS tododay
+	         , todotime
+		FROM
+			tododetail
+			, todocate
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND
+	    	HEX(todocateCode)=#{todocateCode}
+		AND	
+			todocateId=#{todocateId}
+		AND        
+			todoState IN ('TR', 'TU')
+		AND
+		<![CDATA[
+			tododay < curdate()
+		]]> 
+		ORDER BY 
+			tododay ASC
+   			 , todotime ASC 
+	</select>
+	
+	<!-- todoCheck : 할일 상세조회 건 있는지 확인 -->
+	<select id="todoCheck" parameterType="java.util.Map" resultType="java.lang.Boolean">
+	/*todoCheck*/
+		SELECT
+			IF(COUNT(HEX(todoId)=#{todoId}), 1, 0)
+		FROM
+			tododetail 
+			, todocate
+		WHERE
+			todocateCode =cateCode
+		AND
+			HEX(todoId)=#{todoId}
+		AND	
+			todocateId=#{todocateId}
+	</select>
+	
+	<!-- getTodoDetail : 할일 상세조회(단일) -->
+	<select id="getTodoDetail" parameterType="java.util.Map" resultType="TodoVO">
+	/*getTodoDetail*/
+		SELECT
+			HEX(cateCode) AS cateCode
+			 , todocateName AS cateName
+			 , HEX(todoId) AS todoId
+			 , todoTitle
+			 , todoContent
+			 , DATE_FORMAT(tododay, '%Y%m%d') AS tododay
+			 , DATE_FORMAT(todotime, '%H%i%s') AS todotime
+			 , todoState
+			 , todocateId AS userId
+		FROM
+			tododetail 
+			, todocate
+		WHERE
+			todocateCode =cateCode
+		AND
+			HEX(todoId)=#{todoId}
+		AND	
+			todocateId=#{todocateId}
+		AND
+			todoState IN ('TR', 'TU') 
+	</select>
+	
+	
+	<!-- todoUpdating : 할일 수정중으로 상태 변경 -->
+	 <update id="todoUpdating" parameterType="java.util.Map" >
+	/*todoUpdating*/
+		UPDATE
+			tododetail
+			, todocate
+		SET    
+		     todoState='TU'
+		WHERE
+			todocate.todocateCode= tododetail.cateCode
+		AND	
+			HEX(todoId)=#{todoId}
+		AND
+			todocateId=#{todocateId}	
+	</update>
+	
+	<!-- todoUpdate : 할일 수정 -->
+	<update id="todoUpdate" parameterType="TodoVO">
+	/*todo Update*/
+		UPDATE
+			tododetail
+			, todocate
+		SET   
+			cateCode=UNHEX(#{cateCode})
+		     , todoTitle=#{todoTitle}
+		     , todoContent=#{todoContent}
+		     , tododay=#{tododay}
+		     , todotime=#{todotime}
+		     , todoEnddate=curdate()
+		     , todoState='TR'
+		WHERE
+			todocateCode =cateCode
+		AND	
+			HEX(todoId)=#{todoId}
+		AND
+			todocateId=#{userId}		
+	</update>
+	
+	<!-- todoComplete : 할일 완료 -->
+	<update id="todoComplete" parameterType="java.util.Map">
+	/*todoCompletee Update*/
+		UPDATE
+		     tododetail
+		     , todocate
+		SET    
+			todoState='TC'
+			, todoEnddate=curdate()
+		WHERE
+			HEX(todoId)=#{todoId}
+		AND
+			todocateId=#{userId}	
+	</update>
+
+	
+	<!--todoDelete : 할일 삭제 -->
+	<update id="todoDelete" parameterType="java.util.Map">
+	/*todoDelete*/
+		UPDATE
+		     tododetail
+		     , todocate
+		SET    
+			todoState='TD'
+			, todoEnddate=curdate()
+		WHERE
+			HEX(todoId)=#{todoId}
+		AND
+			todocateId=#{todocateId}
+	</update>
+	
+</mapper>
